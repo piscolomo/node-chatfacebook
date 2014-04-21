@@ -1,33 +1,33 @@
-window.onload = function() {
+$(document).ready(function(){
+
+
  
-    var messages = [];
-    var socket = io.connect('http://localhost:3000');
-    var field = document.getElementById("field");
-    var sendButton = document.getElementById("send");
-    var content = document.getElementById("content");
-    var name = document.getElementById("name");
- 
-    socket.on('message', function (data) {
-        if(data.message) {
-            messages.push(data);
-            var html = '';
-            for(var i=0; i<messages.length; i++) {
-                html += '<b>' + (messages[i].username ? messages[i].username : 'Server') + ': </b>';
-                html += messages[i].message + '<br />';
-            }
-            content.innerHTML = html;
-        } else {
-            console.log("There is a problem:", data);
-        }
+    var server = io.connect('http://localhost:3000');
+
+    server.on('connect', function(data){
+        nickname = prompt("What is your name?");
+        server.emit('join',nickname);
+    });
+   
+
+    server.on('sidebarchat',function(name, clientid){
+        $("#usersonline").append('<li class="'+clientid+'">'+name+'</li>');
+    });
+
+    server.on('privatechat', function(text, clientid){
+        $("body").append('<div class="windowchat" id="'+clientid+'">'+text+'<input class="text" type="text"><button class="send">Enviar</button></div>');
+    });
+
+    $("#usersonline").on("click", "li", function(e){
+       var clientid = $(this).attr("class");
+      $("body").append('<div class="windowchat" id="'+clientid+'"><input class="text" type="text"><button class="send">Enviar</button></div>');
     });
  
-    sendButton.onclick = function() {
-        if(name.value == "") {
-            alert("Please type your name!");
-        } else {
-            var text = field.value;
-            socket.emit('send', { message: text, username: name.value });
-        }
-    };
+    $("body").on("click", ".send", function(e){
+        var clientid = $(this).closest(".windowchat").attr("id");
+        var text = $(this).prev().val();
+        server.emit('privatechat', clientid, text);
+    });
+
  
-}
+});
