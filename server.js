@@ -22,10 +22,15 @@ io.sockets.on('connection', function (client) {
     	client.broadcast.emit('sidebarchat', name, client.id);
     });
 
-    client.on('privatechat', function(clientid, text){
-    	io.sockets.socket(clientid).emit('privatechat',text, client.id);
+    client.on('privatechat', function(clientid, name, text){
+    	io.sockets.socket(clientid).emit('privatechat', name, text, client.id);
     });
 
+    client.on('getname', function(){
+        client.get('nickname', function(err, name){
+            client.emit('putname', name);
+        });
+    });
 });
 
 server;
